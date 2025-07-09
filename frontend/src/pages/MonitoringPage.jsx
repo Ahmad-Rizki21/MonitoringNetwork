@@ -4,6 +4,7 @@ import ReactFlow, { MiniMap, Controls, Background, useNodesState, useEdgesState,
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import 'reactflow/dist/style.css';
+import Footer from '../components/Footer';
 
 const socket = io('http://localhost:5000');
 
@@ -17,9 +18,11 @@ const MonitoringPage = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [clusters, setClusters] = useState([]);
-  const [selectedCluster, setSelectedCluster] = useState('');
+  const [selectedCluster, setSelectedCluster] = useState(() => {
+    // Ambil cluster terakhir dari localStorage saat komponen dimuat
+    return localStorage.getItem('selectedCluster') || '';
+  });
 
-  // Fungsi untuk memuat topologi berdasarkan nama cluster
   const fetchTopologyForCluster = useCallback(async (clusterName) => {
     if (!clusterName) {
       setNodes([]);
@@ -56,17 +59,19 @@ const MonitoringPage = () => {
     } catch (error) {
       console.error("Gagal memuat topologi untuk cluster:", clusterName, error);
     }
-  }, [setNodes, setEdges]); // useCallback dependencies
+  }, [setNodes, setEdges]);
 
-  // Effect yang berjalan HANYA SEKALI saat halaman pertama kali dibuka
   useEffect(() => {
     const fetchInitialClusters = async () => {
       try {
         const { data: allDevices } = await axios.get('http://localhost:5000/devices');
         const uniqueClusters = [...new Set(allDevices.map(device => device.cluster))];
         setClusters(uniqueClusters);
-        // Otomatis pilih cluster pertama jika ada
-        if (uniqueClusters.length > 0) {
+        // Jika ada cluster tersimpan di localStorage dan ada di daftar cluster, gunakan itu
+        const savedCluster = localStorage.getItem('selectedCluster');
+        if (savedCluster && uniqueClusters.includes(savedCluster)) {
+          setSelectedCluster(savedCluster);
+        } else if (uniqueClusters.length > 0) {
           setSelectedCluster(uniqueClusters[0]);
         }
       } catch (error) {
@@ -74,14 +79,16 @@ const MonitoringPage = () => {
       }
     };
     fetchInitialClusters();
-  }, []); // <-- Array dependensi kosong, artinya hanya jalan sekali
+  }, []);
 
-  // Effect yang berjalan setiap kali cluster yang dipilih berubah
   useEffect(() => {
+    // Simpan selectedCluster ke localStorage setiap kali berubah
+    if (selectedCluster) {
+      localStorage.setItem('selectedCluster', selectedCluster);
+    }
     fetchTopologyForCluster(selectedCluster);
   }, [selectedCluster, fetchTopologyForCluster]);
 
-  // Effect untuk koneksi WebSocket
   useEffect(() => {
     const onDeviceUpdate = ({ id, status, latency }) => {
       setNodes((prevNodes) =>
@@ -102,20 +109,37 @@ const MonitoringPage = () => {
   }, [setNodes]);
 
   return (
-    <Box>
-      <Heading mb={4}>Real-time Monitoring</Heading>
-      <FormControl mb={4} maxW="400px">
-        <FormLabel>Pilih Cluster</FormLabel>
-        <Select placeholder="Pilih Cluster" value={selectedCluster} onChange={(e) => setSelectedCluster(e.target.value)}>
-          {clusters.map(cluster => <option key={cluster} value={cluster}>{cluster}</option>)}
-        </Select>
-      </FormControl>
-      <Box h="calc(100vh - 220px)" borderWidth="1px" borderRadius="lg" bg="white">
-        <ReactFlow
-          nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} fitView>
-          <MiniMap /> <Controls /> <Background variant="dots" />
-        </ReactFlow>
+    <Box minHeight="100vh" display="flex" flexDirection="column">
+      <Box flex="1">
+        <Heading mb={4}>Real-time Monitoring</Heading>
+        <FormControl mb={6} maxW="500px">
+          <FormLabel>Pilih Cluster</FormLabel>
+          <Select
+            placeholder="Pilih Cluster"
+            value={selectedCluster}
+            onChange={(e) => setSelectedCluster(e.target.value)}
+            size="lg" // Ukuran select lebih besar untuk konsistensi
+          >
+            {clusters.map(cluster => (
+              <option key={cluster} value={cluster}>{cluster}</option>
+            ))}
+          </Select>
+        </FormControl>
+        <Box h="calc(100vh - 200px)" borderWidth="1px" borderRadius="lg" bg="white" overflow="hidden">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            fitView
+          >
+            <MiniMap />
+            <Controls />
+            <Background variant="dots" />
+          </ReactFlow>
+        </Box>
       </Box>
+      <Footer />
     </Box>
   );
 };

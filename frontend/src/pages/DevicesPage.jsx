@@ -1,22 +1,23 @@
-import { Link as RouterLink } from 'react-router-dom'; // <-- Import di atas
-import { Link as ChakraLink } from '@chakra-ui/react'; // <-- Import di atas
+import { Link as RouterLink } from 'react-router-dom';
+import { Link as ChakraLink } from '@chakra-ui/react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useColorModeValue } from '@chakra-ui/react';
 import {
   Box, Heading, Button, Table, Thead, Tbody, Tr, Th, Td, TableContainer, useToast, IconButton, HStack, Flex, Spacer,
   AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, useDisclosure,
-  Skeleton, // <-- Import Skeleton
-  Badge,    // <-- Import Badge
+  Skeleton,
+  Badge,
   VStack,
   Text,
 } from '@chakra-ui/react';
 import { DeleteIcon, EditIcon, AddIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../components/Footer';
 
 const DevicesPage = () => {
   const [devices, setDevices] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // <-- State baru untuk loading
+  const [isLoading, setIsLoading] = useState(true);
   const [deviceToDelete, setDeviceToDelete] = useState(null);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -56,7 +57,6 @@ const DevicesPage = () => {
     }
   };
   
-  // Komponen untuk menampilkan kerangka loading
   const TableSkeleton = () => (
     <>
       <Tr><Td><Skeleton height="20px" /></Td><Td><Skeleton height="20px" /></Td><Td><Skeleton height="20px" /></Td><Td><Skeleton height="20px" /></Td><Td><Skeleton height="20px" /></Td><Td><Skeleton height="20px" /></Td></Tr>
@@ -66,106 +66,103 @@ const DevicesPage = () => {
   );
   
   return (
-    <Box>
-      <Flex mb={6} alignItems="center">
-        <Heading>Manajemen Perangkat</Heading>
-        <Spacer />
-        <Button 
-          colorScheme="teal" 
-          leftIcon={<AddIcon />}
-          onClick={() => navigate('/dashboard/devices/new')}
-        >
-          Tambah Perangkat Baru
-        </Button>
-      </Flex>
+    <Box minHeight="100vh" display="flex" flexDirection="column">
+      <Box flex="1">
+        <Flex mb={6} alignItems="center">
+          <Heading>Manajemen Perangkat</Heading>
+          <Spacer />
+          <Button 
+            colorScheme="teal" 
+            leftIcon={<AddIcon />}
+            onClick={() => navigate('/dashboard/devices/new')}
+          >
+            Tambah Perangkat Baru
+          </Button>
+        </Flex>
 
-      <Box borderWidth="1px" borderRadius="lg" boxShadow="lg" bg={tableBg}>
-        <TableContainer>
-          <Table variant="striped" colorScheme="gray">
-            <Thead>
-              <Tr>
-                <Th>Nama</Th>
-                <Th>IP Address</Th>
-                <Th>Cluster</Th>
-                <Th>Status</Th>
-                <Th>Latency</Th>
-                <Th>Aksi</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {isLoading ? (
-                <TableSkeleton />
-              ) : devices.length > 0 ? (
-                devices.map((device) => (
-                  <Tr key={device.id}>
-                    <Td>{device.name}</Td>
-                    <Td>{device.ip_address}</Td>
-                    <Td>{device.cluster}</Td>
-                    <Td>
-                      <Badge colorScheme={device.status === 'online' ? 'green' : 'red'}>
-                        {device.status}
-                      </Badge>
-                    </Td>
-                    <Td>{device.latency}</Td>
-                    <Td>
-                      <ChakraLink as={RouterLink} to={`/dashboard/devices/detail/${device.id}`} color="teal.500" fontWeight="bold">
-                        {device.name}
-                      </ChakraLink>
-                    </Td>
-                    <Td>
-                      <HStack spacing={2}>
-                        <IconButton
-                          colorScheme="yellow"
-                          aria-label="Edit perangkat"
-                          icon={<EditIcon />}
-                          size="sm"
-                          onClick={() => navigate(`/dashboard/devices/edit/${device.id}`)}
-                        />
-                        <IconButton
-                          colorScheme="red"
-                          aria-label="Hapus perangkat"
-                          icon={<DeleteIcon />}
-                          size="sm"
-                          onClick={() => openDeleteDialog(device.id)}
-                        />
-                      </HStack>
+        <Box borderWidth="1px" borderRadius="lg" boxShadow="lg" bg={tableBg}>
+          <TableContainer>
+            <Table variant="striped" colorScheme="gray">
+              <Thead>
+                <Tr>
+                  <Th>Nama</Th>
+                  <Th>IP Address</Th>
+                  <Th>Cluster</Th>
+                  <Th>Status</Th>
+                  <Th>Latency</Th>
+                  <Th>Aksi</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {isLoading ? (
+                  <TableSkeleton />
+                ) : devices.length > 0 ? (
+                  devices.map((device) => (
+                    <Tr key={device.id}>
+                      <Td>{device.name}</Td>
+                      <Td>{device.ip_address}</Td>
+                      <Td>{device.cluster}</Td>
+                      <Td>
+                        <Badge colorScheme={device.status === 'online' ? 'green' : 'red'}>
+                          {device.status}
+                        </Badge>
+                      </Td>
+                      <Td>{device.latency}</Td>
+                      <Td>
+                        <HStack spacing={2}>
+                          <IconButton
+                            colorScheme="yellow"
+                            aria-label="Edit perangkat"
+                            icon={<EditIcon />}
+                            size="sm"
+                            onClick={() => navigate(`/dashboard/devices/edit/${device.id}`)}
+                          />
+                          <IconButton
+                            colorScheme="red"
+                            aria-label="Hapus perangkat"
+                            icon={<DeleteIcon />}
+                            size="sm"
+                            onClick={() => openDeleteDialog(device.id)}
+                          />
+                        </HStack>
+                      </Td>
+                    </Tr>
+                  ))
+                ) : (
+                  <Tr>
+                    <Td colSpan={6}>
+                      <VStack py={10}>
+                        <Heading size="md" color="gray.500">Belum Ada Perangkat</Heading>
+                        <Text color="gray.500">Silakan tambahkan perangkat baru untuk memulai monitoring.</Text>
+                      </VStack>
                     </Td>
                   </Tr>
-                ))
-              ) : (
-                <Tr>
-                  <Td colSpan={6}>
-                    <VStack py={10}>
-                      <Heading size="md" color="gray.500">Belum Ada Perangkat</Heading>
-                      <Text color="gray.500">Silakan tambahkan perangkat baru untuk memulai monitoring.</Text>
-                    </VStack>
-                  </Td>
-                </Tr>
-              )}
-            </Tbody>
-          </Table>
-        </TableContainer>
-      </Box>
+                )}
+              </Tbody>
+            </Table>
+          </TableContainer>
+        </Box>
 
-      {/* Dialog Konfirmasi Hapus */}
-      <AlertDialog
-        isOpen={isOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">Hapus Perangkat</AlertDialogHeader>
-            <AlertDialogBody>
-              Apakah Anda yakin ingin menghapus perangkat ini? Aksi ini tidak bisa dibatalkan.
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>Batal</Button>
-              <Button colorScheme="red" onClick={confirmDelete} ml={3}>Hapus</Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+        <AlertDialog
+          isOpen={isOpen}
+          leastDestructiveRef={cancelRef}
+          onClose={onClose}
+        >
+          <AlertDialogOverlay>
+            <AlertDialogContent>
+              <AlertDialogHeader fontSize="lg" fontWeight="bold">Hapus Perangkat</AlertDialogHeader>
+              <AlertDialogBody>
+                Apakah Anda yakin ingin menghapus perangkat ini? Aksi ini tidak bisa dibatalkan.
+              </AlertDialogBody>
+              <AlertDialogFooter>
+                <Button ref={cancelRef} onClick={onClose}>Batal</Button>
+                <Button colorScheme="red" onClick={confirmDelete} ml={3}>Hapus</Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogOverlay>
+        </AlertDialog>
+      </Box>
+      <Footer />
     </Box>
   );
 };
